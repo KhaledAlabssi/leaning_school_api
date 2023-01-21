@@ -9,7 +9,7 @@ import {
   admUnwithdrawTeacherCtrl,
   admWithdrawTeacherCtrl,
   deleteAdmCtrl,
-  getAdminCtrl,
+  getAdminProfileCtrl,
   getAdminsCtrl,
   loginAdmCtrl,
   registerAdmCtrl,
@@ -27,7 +27,7 @@ adminRouter.post("/login", loginAdmCtrl)
 adminRouter.get("/", isLogin,  getAdminsCtrl)
 
 // get single admins
-adminRouter.get("/:id", getAdminCtrl)
+adminRouter.get("/profile", isLogin, getAdminProfileCtrl)
 
 // update admins
 adminRouter.put("/:id", updateAdmCtrl)
