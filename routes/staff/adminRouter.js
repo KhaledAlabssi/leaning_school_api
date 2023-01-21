@@ -1,4 +1,5 @@
 import express from "express"
+import isLogin from "../../middlewares/isLogin.js"
 import {
   
   admPublishExamCtrl,
@@ -23,7 +24,7 @@ adminRouter.post("/register", registerAdmCtrl)
 adminRouter.post("/login", loginAdmCtrl)
 
 // get all admins
-adminRouter.get("/", getAdminsCtrl)
+adminRouter.get("/", isLogin,  getAdminsCtrl)
 
 // get single admins
 adminRouter.get("/:id", getAdminCtrl)

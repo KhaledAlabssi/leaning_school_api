@@ -1,33 +1,59 @@
+import asyncHandler from 'express-async-handler'
+import Admin from '../../model/staff/Admin.js'
+
 
 // @desc Register admin
 // @route Post /api/v1/admins/register
 // @access Private
-export const registerAdmCtrl = (req, res) => {
-  try {
-    res.status(201).json({
-      status: "success",
-      data: "Admin has been registered",
-    })
-  } catch (error) {
-    res.json({ status: "failed", error: error.message })
+export const registerAdmCtrl = asyncHandler (async (req, res) => {
+  const {name, email, password} = req.body;
+  if (!name || !email || !password){
+    return res.json({message: "Please insert valid data..."})
+
   }
-}
+  
+    // check if email exists...
+    const adminFound = await Admin.findOne({email})
+    if(!adminFound) {
+      const user = await Admin.create({
+        name,
+        email,
+        password
+      })
+      return res.status(201).json({
+        status: "success",
+        data: user,
+      })
+    }
+    throw new Error("Admin Exists")
+   
+
+  
+})
 
 // @desc Login admin
 // @route Post /api/v1/admins/login
 // @access Private
-export const loginAdmCtrl = (req, res) => {
+export const loginAdmCtrl = async (req, res) => {
+  const {email, password} = req.body;
   try {
-    res.status(201).json({
-      status: "success",
-      data: "Admin has been loggedin",
-    })
+    const user = await Admin.findOne({email})
+    if (!user) {
+      return res.json({message: "User not found..."})
+    }else if (user && await user.verifyPassword(password)){
+      return res.status(200).json({status: "success", data: user})
+    }else {
+      return res.status(500).json({message: "Invalid login credentials..."})
+    }
+    
   } catch (error) {
     res.json({ status: "failed", error: error.message })
   }
 }
 
-
+// @desc Get all admins
+// @route Get /api/v1/admins
+// @access Private
 export const getAdminsCtrl = (req, res) => {
   try {
     res.status(201).json({
@@ -40,7 +66,7 @@ export const getAdminsCtrl = (req, res) => {
 }
 
 // @desc Get single admins
-// @route Get /api/v1/admins
+// @route Get /api/v1/admins/:id
 // @access Private
 export const getAdminCtrl = (req, res) => {
   try {

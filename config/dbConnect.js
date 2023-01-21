@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+mongoose.set('strictQuery', true)
 import dotenv from 'dotenv'
 dotenv.config();
 const dbConnect = async () => {
