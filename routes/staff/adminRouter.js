@@ -1,5 +1,6 @@
 import express from "express"
 import isLogin from "../../middlewares/isLogin.js"
+
 import {
   
   admPublishExamCtrl,
@@ -15,6 +16,7 @@ import {
   registerAdmCtrl,
   updateAdmCtrl,
 } from "../../controllers/staff/adminController.js"
+import isAdmin from "../../middlewares/isAdmin.js"
 const adminRouter = express.Router()
 
 //admin register
@@ -24,13 +26,13 @@ adminRouter.post("/register", registerAdmCtrl)
 adminRouter.post("/login", loginAdmCtrl)
 
 // get all admins
-adminRouter.get("/", isLogin,  getAdminsCtrl)
+adminRouter.get("/", isLogin, isAdmin, getAdminsCtrl)
 
 // get single admins
-adminRouter.get("/profile", isLogin, getAdminProfileCtrl)
+adminRouter.get("/profile", isLogin, isAdmin, getAdminProfileCtrl)
 
 // update admins
-adminRouter.put("/:id", updateAdmCtrl)
+adminRouter.put("/", isLogin, isAdmin, updateAdmCtrl)
 
 //delete admins
 adminRouter.delete("/:id", deleteAdmCtrl)

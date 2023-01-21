@@ -4,7 +4,7 @@ const isLogin = async (req, res, next) => {
     // recive token, verify it, save it to user req.obj
 
     const {authorization} = req.headers
-    const token = authorization.split(" ")[1]
+    const token = authorization?.split(" ")[1]
     const verify = verifyToken(token)
     if(verify) {
         // find user
