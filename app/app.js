@@ -1,11 +1,20 @@
 import express from "express"
 
 import morgan from "morgan"
+import adminRouter from "../routes/staff/adminRouter.js";
 
-const app = express();
-
+const app = express()
 
 //==== Middleware
-app.use(morgan('dev'))
+app.use(morgan("dev"))
 
-export default app;
+//==== Routes
+
+// adminRouter...
+app.use("/api/v1/admins", adminRouter)
+
+
+
+
+
+export default app
