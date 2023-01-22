@@ -1,5 +1,6 @@
 import asyncHandler from "express-async-handler";
 import Admin from "../../model/staff/Admin.js";
+import bcrypt from "bcryptjs";
 import { generateToken, verifyToken } from "../../utils/jwToken.js";
 
 // @desc Register admin
@@ -13,11 +14,14 @@ export const registerAdmCtrl = asyncHandler(async (req, res) => {
 
   // check if email exists...
   const adminFound = await Admin.findOne({ email });
+  // hashing password
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
   if (!adminFound) {
     const user = await Admin.create({
       name,
       email,
-      password,
+      password: hashedPassword,
     });
     return res.status(201).json({
       status: "success",
@@ -36,17 +40,18 @@ export const loginAdmCtrl = asyncHandler(async (req, res) => {
 
   const user = await Admin.findOne({ email });
   if (!user) {
-    return res.json({ message: "User not found..." });
-  } else if (user && (await user.verifyPassword(password))) {
-    return res
-      .status(200)
-      .json({
-        status: "success",
-        data: generateToken(user._id),
-        message: "Admin logged in successfully",
-      });
-  } else {
     return res.status(500).json({ message: "Invalid login credentials..." });
+  }
+  // verify password
+  const isMatched = await bcrypt.compare(password, user.password);
+  if (!isMatched) {
+    return res.status(500).json({ message: "Invalid login credentials..." });
+  } else {
+    return res.status(200).json({
+      status: "success",
+      data: generateToken(user._id),
+      message: "Admin logged in successfully",
+    });
   }
 });
 
@@ -54,13 +59,12 @@ export const loginAdmCtrl = asyncHandler(async (req, res) => {
 // @route Get /api/v1/admins
 // @access Private
 export const getAdminsCtrl = asyncHandler(async (req, res) => {
-  const admins = await Admin.find().select('-password')
+  const admins = await Admin.find().select("-password");
   res.status(200).json({
     status: "success",
     data: admins,
-    message: "admins fetch successfully"
-  })
-  
+    message: "admins fetch successfully",
+  });
 });
 
 // @desc Get single admins
@@ -76,7 +80,7 @@ export const getAdminProfileCtrl = asyncHandler(async (req, res) => {
     res.status(200).json({
       status: "success",
       data: admin,
-      message: "Admin profile fetched succsesfully"
+      message: "Admin profile fetched succsesfully",
     });
   }
 });
@@ -85,25 +89,59 @@ export const getAdminProfileCtrl = asyncHandler(async (req, res) => {
 // @route Put /api/v1/admins/:id
 // @access Private
 export const updateAdmCtrl = asyncHandler(async (req, res) => {
-  const {email, name, password} = req.body;
-  const emailExist = await Admin.findOne({email})
+  const { email, name, password } = req.body;
+  const emailExist = await Admin.findOne({ email });
   if (emailExist) {
-    throw new Error("This email is taken/exist")
-  } else {
-    const admin = await Admin.findByIdAndUpdate(req.userAuth._id, {
-      email,
-      password,
-      name
-    }, {
-      new: true,
-      runValidators: true
-    })
+    throw new Error("This email is taken/exist");
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  if(password) {
+    const admin = await Admin.findByIdAndUpdate(
+      req.userAuth._id,
+      {
+        email,
+        password: hashedPassword,
+        name,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     res.status(200).json({
       status: "success",
       data: admin,
-      message: "Admin updated successfully"
-    })
+      message: "Admin updated successfully",
+    });
+
+  } else {
+
+    const admin = await Admin.findByIdAndUpdate(
+      req.userAuth._id,
+      {
+        email,
+        name,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    res.status(200).json({
+      status: "success",
+      data: admin,
+      message: "Admin updated successfully",
+    });
+
+
   }
+
+
+
+
   
 });
 
