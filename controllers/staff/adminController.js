@@ -2,6 +2,8 @@ import asyncHandler from "express-async-handler";
 import Admin from "../../model/staff/Admin.js";
 import bcrypt from "bcryptjs";
 import { generateToken, verifyToken } from "../../utils/jwToken.js";
+import { hashPassword, isPasswordMatched } from "../../utils/helpers.js";
+
 
 // @desc Register admin
 // @route Post /api/v1/admins/register
@@ -15,13 +17,12 @@ export const registerAdmCtrl = asyncHandler(async (req, res) => {
   // check if email exists...
   const adminFound = await Admin.findOne({ email });
   // hashing password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
+  
   if (!adminFound) {
     const user = await Admin.create({
       name,
       email,
-      password: hashedPassword,
+      password: await hashPassword(password)
     });
     return res.status(201).json({
       status: "success",
@@ -43,7 +44,7 @@ export const loginAdmCtrl = asyncHandler(async (req, res) => {
     return res.status(500).json({ message: "Invalid login credentials..." });
   }
   // verify password
-  const isMatched = await bcrypt.compare(password, user.password);
+  const isMatched = await isPasswordMatched(password, user.password);
   if (!isMatched) {
     return res.status(500).json({ message: "Invalid login credentials..." });
   } else {
@@ -95,15 +96,14 @@ export const updateAdmCtrl = asyncHandler(async (req, res) => {
     throw new Error("This email is taken/exist");
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
+  
 
   if(password) {
     const admin = await Admin.findByIdAndUpdate(
       req.userAuth._id,
       {
         email,
-        password: hashedPassword,
+        password: await hashPassword(password),
         name,
       },
       {
